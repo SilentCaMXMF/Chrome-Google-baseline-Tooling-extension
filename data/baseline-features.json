@@ -1,0 +1,202 @@
+{
+  "version": "1.0.0",
+  "updated": "2024-03-15T00:00:00Z",
+  "features": [
+    {
+      "id": "optional-chaining",
+      "name": "Optional Chaining (?.)",
+      "category": "javascript",
+      "status": "baseline",
+      "description": "Safely access nested object properties without checking each level",
+      "spec": "https://tc39.es/ecma262/#sec-optional-chaining",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "80"
+        },
+        "firefox": {
+          "version_added": "74"
+        },
+        "safari": {
+          "version_added": "13.1"
+        },
+        "edge": {
+          "version_added": "80"
+        }
+      },
+      "baseline": {
+        "since": "2020-03-10",
+        "high_usage": 0.98,
+        "global_usage": 0.95
+      }
+    },
+    {
+      "id": "nullish-coalescing",
+      "name": "Nullish Coalescing (??)",
+      "category": "javascript",
+      "status": "baseline",
+      "description": "Provide default values for null or undefined values",
+      "spec": "https://tc39.es/ecma262/#sec-binary-logical-operators",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "80"
+        },
+        "firefox": {
+          "version_added": "72"
+        },
+        "safari": {
+          "version_added": "13.1"
+        },
+        "edge": {
+          "version_added": "80"
+        }
+      },
+      "baseline": {
+        "since": "2020-03-10",
+        "high_usage": 0.98,
+        "global_usage": 0.95
+      }
+    },
+    {
+      "id": "css-nesting",
+      "name": "CSS Nesting",
+      "category": "css",
+      "status": "baseline",
+      "description": "Nest CSS rules for better readability and maintainability",
+      "spec": "https://drafts.csswg.org/css-nesting-1/",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_nesting/Using_CSS_nesting",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "112"
+        },
+        "firefox": {
+          "version_added": "117"
+        },
+        "safari": {
+          "version_added": "16.5"
+        },
+        "edge": {
+          "version_added": "112"
+        }
+      },
+      "baseline": {
+        "since": "2023-04-01",
+        "high_usage": 0.95,
+        "global_usage": 0.92
+      }
+    },
+    {
+      "id": "css-has",
+      "name": ":has() Selector",
+      "category": "css",
+      "status": "new",
+      "description": "Style elements based on their descendants",
+      "spec": "https://drafts.csswg.org/selectors-4/#relational",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/CSS/:has",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "105"
+        },
+        "firefox": {
+          "version_added": "121"
+        },
+        "safari": {
+          "version_added": "15.4"
+        },
+        "edge": {
+          "version_added": "105"
+        }
+      },
+      "baseline": {
+        "since": "2023-03-15",
+        "high_usage": 0.92,
+        "global_usage": 0.88
+      }
+    },
+    {
+      "id": "css-container-queries",
+      "name": "CSS Container Queries",
+      "category": "css",
+      "status": "new",
+      "description": "Style elements based on their container size",
+      "spec": "https://drafts.csswg.org/css-contain-3/",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "105"
+        },
+        "firefox": {
+          "version_added": "110"
+        },
+        "safari": {
+          "version_added": "16.0"
+        },
+        "edge": {
+          "version_added": "105"
+        }
+      },
+      "baseline": {
+        "since": "2023-01-10",
+        "high_usage": 0.89,
+        "global_usage": 0.85
+      }
+    },
+    {
+      "id": "top-level-await",
+      "name": "Top-level await",
+      "category": "javascript",
+      "status": "new",
+      "description": "Use await at the top level of modules",
+      "spec": "https://tc39.es/proposal-top-level-await/",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await#top_level_await",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "89"
+        },
+        "firefox": {
+          "version_added": "89"
+        },
+        "safari": {
+          "version_added": "15.0"
+        },
+        "edge": {
+          "version_added": "89"
+        }
+      },
+      "baseline": {
+        "since": "2022-05-15",
+        "high_usage": 0.93,
+        "global_usage": 0.90
+      }
+    },
+    {
+      "id": "private-class-fields",
+      "name": "Private Class Fields",
+      "category": "javascript",
+      "status": "new",
+      "description": "Encapsulate class fields with private # syntax",
+      "spec": "https://tc39.es/proposal-class-fields/",
+      "mdn": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields",
+      "browserSupport": {
+        "chrome": {
+          "version_added": "74"
+        },
+        "firefox": {
+          "version_added": "90"
+        },
+        "safari": {
+          "version_added": "14.1"
+        },
+        "edge": {
+          "version_added": "79"
+        }
+      },
+      "baseline": {
+        "since": "2021-10-01",
+        "high_usage": 0.96,
+        "global_usage": 0.94
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baseline Checker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Baseline Checker</h1>
+      <button id="scanBtn" class="btn primary">Scan Current File</button>
+    </header>
+    
+    <div class="status" id="status">
+      <div class="spinner" id="spinner"></div>
+      <p id="statusText">Ready to scan</p>
+    </div>
+    
+    <div class="results" id="results">
+      <div class="results-header">
+        <h2>Feature Compatibility</h2>
+        <div class="summary" id="summary">
+          <span class="badge success">0 ✅</span>
+          <span class="badge warning">0 ⚠️</span>
+          <span class="badge error">0 ❌</span>
+        </div>
+      </div>
+      
+      <div class="feature-list" id="featureList">
+        <div class="empty-state">
+          <p>No features analyzed yet. Click "Scan Current File" to begin.</p>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p class="last-updated">Baseline data: <span id="baselineVersion">Loading...</span></p>
+      <p class="help-text">ℹ️ Hover over features for more details</p>
+    </footer>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
