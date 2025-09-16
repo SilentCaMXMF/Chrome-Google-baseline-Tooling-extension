@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // State
   let currentTab = null;
   let lastAnalysis = null;
+  let currentIssues = [];
 
   // Initialize the popup
   async function init() {
@@ -41,6 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!tab.url.startsWith('http')) {
         setStatus('This page cannot be analyzed', 'error');
         scanBtn.disabled = true;
+      } else {
+        // Request the latest analysis results
+        chrome.tabs.sendMessage(tab.id, { type: 'GET_ANALYSIS_RESULTS' }, response => {
+          if (chrome.runtime.lastError) {
+            console.log('No analysis results yet:', chrome.runtime.lastError);
+            return;
+          }
+          if (response && response.issues) {
+            displayResults(response);
+          }
+        });
       }
     } catch (error) {
       console.error('Error getting active tab:', error);
@@ -48,123 +60,156 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Start the analysis process
+  // Start code analysis
   async function startAnalysis() {
     if (!currentTab) return;
     
-    setStatus('Analyzing code...', 'loading');
+    setStatus('Analyzing code...', 'info');
+    scanBtn.disabled = true;
+    spinner.style.display = 'inline-block';
     
     try {
-      // Send a message to the content script to analyze the current code
-      const response = await chrome.tabs.sendMessage(currentTab.id, {
-        type: 'ANALYZE_CURRENT_CODE'
+      // Send message to content script to analyze the code
+      const response = await chrome.tabs.sendMessage(currentTab.id, { 
+        type: 'ANALYZE_CODE' 
       });
       
-      // The actual response will come through the runtime.onMessage listener below
+      if (response && response.issues) {
+        displayResults(response);
+        setStatus('Analysis complete', 'success');
+      } else {
+        setStatus('No issues found', 'success');
+      }
     } catch (error) {
       console.error('Error during analysis:', error);
-      setStatus('Analysis failed. Please try again.', 'error');
+      setStatus('Analysis failed', 'error');
+    } finally {
+      scanBtn.disabled = false;
+      spinner.style.display = 'none';
     }
   }
 
   // Update the UI with analysis results
   function displayResults(results) {
-    if (!results || !results.features || results.features.length === 0) {
+    currentIssues = results.issues || [];
+    
+    // Update summary badges
+    const counts = {
+      success: 0,
+      warning: 0,
+      error: 0
+    };
+    
+    currentIssues.forEach(issue => {
+      counts[issue.severity] = (counts[issue.severity] || 0) + 1;
+    });
+    
+    summaryBadges.success.textContent = `${counts.success} ✅`;
+    summaryBadges.warning.textContent = `${counts.warning} ⚠️`;
+    summaryBadges.error.textContent = `${counts.error} ❌`;
+    
+    // Update feature list
+    if (currentIssues.length === 0) {
       featureList.innerHTML = `
         <div class="empty-state">
-          <p>No web platform features detected in the current file.</p>
+          <p>No compatibility issues found! 🎉</p>
+          <p class="subtext">Your code is looking good with the current baseline.</p>
         </div>
       `;
-      setStatus('No features found', 'success');
       return;
     }
     
-    // Count features by status
-    const counts = {
-      baseline: 0,
-      new: 0,
-      unsupported: 0
-    };
-    
-    // Sort features by status (unsupported first, then new, then baseline)
-    const sortedFeatures = [...results.features].sort((a, b) => {
-      const statusOrder = { 'unsupported': 0, 'new': 1, 'baseline': 2 };
-      return statusOrder[a.status] - statusOrder[b.status];
-    });
-    
-    // Generate HTML for each feature
-    const featuresHtml = sortedFeatures.map(feature => {
-      // Update counts
-      if (feature.status === 'baseline') counts.baseline++;
-      else if (feature.status === 'new') counts.new++;
-      else counts.unsupported++;
-      
-      // Get status display text and class
-      let statusText, statusClass, statusEmoji;
-      
-      switch (feature.status) {
-        case 'baseline':
-          statusText = 'Baseline';
-          statusClass = 'success';
-          statusEmoji = '✅';
-          break;
-        case 'new':
-          statusText = 'New';
-          statusClass = 'warning';
-          statusEmoji = '⚠️';
-          break;
-        case 'unsupported':
-          statusText = 'Unsupported';
-          statusClass = 'error';
-          statusEmoji = '❌';
-          break;
+    // Group issues by feature
+    const issuesByFeature = currentIssues.reduce((acc, issue) => {
+      if (!acc[issue.feature]) {
+        acc[issue.feature] = [];
       }
+      acc[issue.feature].push(issue);
+      return acc;
+    }, {});
+    
+    // Create feature cards
+    featureList.innerHTML = Object.entries(issuesByFeature).map(([feature, issues]) => {
+      const featureInfo = issues[0]; // Use first issue for feature metadata
+      const severity = issues.some(i => i.severity === 'error') ? 'error' : 
+                      issues.some(i => i.severity === 'warning') ? 'warning' : 'success';
       
       return `
-        <div class="feature-item ${statusClass}" title="${feature.description || 'No description available'}">
+        <div class="feature-card ${severity}" data-feature="${feature}">
           <div class="feature-header">
-            <span class="feature-name">${feature.name}</span>
-            <span class="feature-status ${statusClass}">${statusEmoji} ${statusText}</span>
+            <h3>${feature}</h3>
+            <div class="feature-severity">
+              <span class="severity-badge ${severity}">
+                ${severity === 'error' ? '❌' : severity === 'warning' ? '⚠️' : '✅'} ${severity}
+              </span>
+            </div>
           </div>
-          ${feature.details ? `<div class="feature-details">${feature.details}</div>` : ''}
-          ${feature.moreInfo ? `<a href="${feature.moreInfo}" target="_blank" class="feature-link">Learn more</a>` : ''}
+          
+          <div class="feature-details">
+            <p class="feature-message">${featureInfo.message}</p>
+            
+            <div class="feature-links">
+              <a href="${featureInfo.docsUrl}" target="_blank" class="btn small">
+                📚 View Documentation
+              </a>
+              <button class="btn small secondary view-in-code" data-feature="${feature}">
+                🔍 Show in Code
+              </button>
+            </div>
+            
+            ${issues.length > 1 ? `
+              <div class="issue-count">
+                ${issues.length} ${issues.length === 1 ? 'issue' : 'issues'} found
+              </div>
+            ` : ''}
+          </div>
         </div>
       `;
     }).join('');
     
-    // Update the UI
-    featureList.innerHTML = featuresHtml;
+    // Add event listeners for "Show in Code" buttons
+    document.querySelectorAll('.view-in-code').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const feature = e.target.dataset.feature;
+        const issues = currentIssues.filter(issue => issue.feature === feature);
+        
+        // Send message to content script to highlight the feature
+        chrome.tabs.sendMessage(currentTab.id, {
+          type: 'HIGHLIGHT_FEATURE',
+          feature: feature
+        });
+        
+        // Close the popup
+        window.close();
+      });
+    });
     
-    // Update summary badges
-    summaryBadges.success.textContent = `${counts.baseline} ✅`;
-    summaryBadges.warning.textContent = `${counts.new} ⚠️`;
-    summaryBadges.error.textContent = `${counts.unsupported} ❌`;
-    
-    // Update status
-    if (counts.unsupported > 0) {
-      setStatus(`Found ${counts.unsupported} unsupported features`, 'error');
-    } else if (counts.new > 0) {
-      setStatus(`Found ${counts.new} new features`, 'warning');
-    } else {
-      setStatus(`All ${counts.baseline} features are baseline`, 'success');
-    }
-    
-    // Store the last analysis
-    lastAnalysis = results;
+    // Add event listeners for documentation links to track usage
+    document.querySelectorAll('a[target="_blank"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        // You could add analytics here to track which documentation links are used
+        console.log('Documentation link clicked:', e.target.href);
+      });
+    });
   }
 
   // Update the status message
   function setStatus(message, type = 'info') {
     statusText.textContent = message;
-    statusText.className = type;
+    statusText.className = '';
     
-    // Show/hide spinner
-    if (type === 'loading') {
-      spinner.style.display = 'block';
-      scanBtn.disabled = true;
-    } else {
-      spinner.style.display = 'none';
-      scanBtn.disabled = false;
+    switch (type) {
+      case 'error':
+        statusText.classList.add('error');
+        break;
+      case 'success':
+        statusText.classList.add('success');
+        break;
+      case 'warning':
+        statusText.classList.add('warning');
+        break;
+      default:
+        statusText.classList.add('info');
     }
   }
 
@@ -172,8 +217,8 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'ANALYSIS_RESULTS') {
       displayResults(message.results);
-    } else if (message.type === 'ANALYSIS_ERROR') {
-      setStatus(message.error || 'Analysis failed', 'error');
+      if (sendResponse) sendResponse({ status: 'success' });
+      return true;
     }
   });
 

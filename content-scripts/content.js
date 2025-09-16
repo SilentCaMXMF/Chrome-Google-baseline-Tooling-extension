@@ -12,6 +12,7 @@ class CodeExtractor {
     this.observer = null;
     this.lastCode = '';
     this.debounceTimer = null;
+    this.featureHighlights = new Map();
     this.init();
   }
 
@@ -40,73 +41,190 @@ class CodeExtractor {
     }
     
     this.debounceTimer = setTimeout(() => {
-      this.extractCode();
+      this.analyzeCode();
     }, 1000); // 1 second debounce
   }
 
-  extractCode() {
-    // This is a placeholder - the actual implementation will depend on the specific Cloud IDE's DOM structure
-    // For now, we'll try to find common editor elements
+  async analyzeCode() {
     const editor = document.querySelector('.monaco-editor, .CodeMirror, .ace_editor, [role="textbox"], [contenteditable="true"]');
-    
-    if (!editor) {
-      console.log('Baseline Checker: No editor element found');
-      return;
-    }
+    if (!editor) return;
 
-    let code = '';
+    // Get the current code (implementation depends on the editor)
+    const code = this.getEditorContent(editor);
+    if (code === this.lastCode) return;
     
-    // Handle different editor types
-    if (editor.classList.contains('monaco-editor')) {
-      // VS Code-based editors
-      code = editor.innerText;
-    } else if (editor.classList.contains('CodeMirror')) {
-      // CodeMirror-based editors
-      const cm = editor.CodeMirror || editor.closest('.CodeMirror')?.CodeMirror;
-      if (cm) code = cm.getValue();
-    } else if (editor.classList.contains('ace_editor')) {
-      // ACE editors
-      const aceEditor = window.ace && window.ace.edit(editor.id || editor);
-      if (aceEditor) code = aceEditor.getValue();
-    } else if (editor.getAttribute('contenteditable') === 'true' || editor.role === 'textbox') {
-      // Generic contenteditable or textbox
-      code = editor.innerText || editor.textContent;
-    }
+    this.lastCode = code;
 
-    // Only process if code has changed
-    if (code && code !== this.lastCode) {
-      this.lastCode = code;
-      this.analyzeCode(code);
+    // Send code to background for analysis
+    const response = await chrome.runtime.sendMessage({
+      type: 'ANALYZE_CODE',
+      code: code
+    });
+
+    if (response && response.issues) {
+      this.highlightIssues(response.issues, editor);
     }
   }
 
-  analyzeCode(code) {
-    // Send the code to the background script for analysis
-    chrome.runtime.sendMessage({
-      type: 'CODE_ANALYSIS_REQUEST',
-      code: code,
-      timestamp: new Date().toISOString()
-    }, response => {
-      if (chrome.runtime.lastError) {
-        console.error('Baseline Checker:', chrome.runtime.lastError);
-        return;
+  highlightIssues(issues, editor) {
+    // Remove previous highlights
+    this.featureHighlights.forEach(highlight => {
+      try {
+        const element = document.querySelector(`[data-highlight-id="${highlight.id}"]`);
+        if (element) {
+          element.replaceWith(highlight.originalTextNode);
+        }
+      } catch (e) {
+        console.error('Error removing highlight:', e);
       }
-      console.log('Analysis results:', response);
+    });
+    this.featureHighlights.clear();
+
+    // Add new highlights
+    issues.forEach(issue => {
+      const { feature, message, docsUrl, startPos, endPos } = issue;
+      const range = document.createRange();
+      
+      try {
+        // This is a simplified example - you'll need to adjust based on how you track positions
+        const textNode = this.findTextNodeAtPosition(editor, startPos, endPos);
+        if (!textNode) return;
+
+        range.setStart(textNode, startPos);
+        range.setEnd(textNode, Math.min(endPos, textNode.length));
+
+        const highlightId = `highlight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const highlightSpan = document.createElement('span');
+        highlightSpan.className = 'baseline-highlight';
+        highlightSpan.dataset.highlightId = highlightId;
+        highlightSpan.dataset.feature = feature;
+        highlightSpan.dataset.docsUrl = docsUrl;
+        
+        // Store the original text node to restore it later
+        this.featureHighlights.set(highlightId, {
+          originalTextNode: textNode.cloneNode(true),
+          id: highlightId
+        });
+
+        // Create tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'baseline-tooltip';
+        tooltip.innerHTML = `
+          <div class="tooltip-header">
+            <span class="tooltip-title">${feature}</span>
+            <a href="${docsUrl}" target="_blank" class="tooltip-docs-link">View Docs</a>
+          </div>
+          <div class="tooltip-message">${message}</div>
+        `;
+        
+        highlightSpan.appendChild(tooltip);
+        range.surroundContents(highlightSpan);
+      } catch (e) {
+        console.error('Error highlighting issue:', e);
+      }
     });
   }
 
-  handleMessage(message, sender, sendResponse) {
-    switch (message.type) {
-      case 'GET_CURRENT_CODE':
-        sendResponse({ code: this.lastCode });
-        break;
-      case 'ANALYZE_CURRENT_CODE':
-        this.extractCode();
-        break;
+  // Helper methods
+  getEditorContent(editor) {
+    // Implementation depends on the specific editor
+    return editor.innerText || editor.textContent || '';
+  }
+
+  findTextNodeAtPosition(editor, startPos, endPos) {
+    // This is a simplified implementation
+    // You'll need to adjust this based on the actual editor's DOM structure
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+
+    let currentNode;
+    let position = 0;
+    
+    while (currentNode = walker.nextNode()) {
+      const nodeLength = currentNode.length || 0;
+      if (position + nodeLength >= startPos) {
+        return currentNode;
+      }
+      position += nodeLength;
     }
-    return true; // Keep the message channel open for async response
+    
+    return null;
+  }
+
+  handleMessage(message, sender, sendResponse) {
+    if (message.type === 'HIGHLIGHT_ISSUES') {
+      this.highlightIssues(message.issues, document.activeElement);
+    }
   }
 }
+
+// Add styles for highlights and tooltips
+const style = document.createElement('style');
+style.textContent = `
+  .baseline-highlight {
+    position: relative;
+    background-color: rgba(255, 183, 0, 0.2);
+    border-bottom: 1px dashed #ffb700;
+    cursor: help;
+  }
+  
+  .baseline-highlight:hover .baseline-tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .baseline-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 250px;
+    background: #2d2d2d;
+    color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+  }
+  
+  .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .tooltip-title {
+    font-weight: bold;
+    color: #ffb700;
+  }
+  
+  .tooltip-docs-link {
+    color: #4da6ff;
+    text-decoration: none;
+    font-size: 11px;
+  }
+  
+  .tooltip-docs-link:hover {
+    text-decoration: underline;
+    pointer-events: auto;
+  }
+  
+  .tooltip-message {
+    color: #e0e0e0;
+    line-height: 1.4;
+  }
+`;
+document.head.appendChild(style);
 
 // Initialize the code extractor when the script loads
 new CodeExtractor();

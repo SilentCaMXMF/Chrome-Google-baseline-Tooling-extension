@@ -1,0 +1,191 @@
+/* Content Script Styles for Baseline Checker */
+
+/* Base styles for code highlights */
+.baseline-highlight {
+  position: relative;
+  display: inline;
+  background-color: rgba(255, 183, 0, 0.2);
+  border-bottom: 1px dashed #ffb700;
+  border-radius: 2px;
+  cursor: help;
+  transition: all 0.2s ease;
+  padding: 0 1px;
+  margin: 0 1px;
+  line-height: 1.5;
+}
+
+/* Different severity levels */
+.baseline-highlight.error {
+  background-color: rgba(244, 67, 54, 0.15);
+  border-bottom-color: #f44336;
+}
+
+.baseline-highlight.warning {
+  background-color: rgba(255, 152, 0, 0.15);
+  border-bottom-color: #ff9800;
+}
+
+.baseline-highlight.info {
+  background-color: rgba(33, 150, 243, 0.15);
+  border-bottom-color: #2196f3;
+}
+
+/* Tooltip container */
+.baseline-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  z-index: 10000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  background: #2d2d2d;
+  color: #fff;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Show tooltip on hover */
+.baseline-highlight:hover .baseline-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* Tooltip header */
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-title {
+  font-weight: 600;
+  color: #ffb700;
+  font-size: 14px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltip-severity {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severity-error { background-color: rgba(244, 67, 54, 0.2); color: #ff8a80; }
+.severity-warning { background-color: rgba(255, 152, 0, 0.2); color: #ffd180; }
+.severity-info { background-color: rgba(33, 150, 243, 0.2); color: #80d8ff; }
+
+/* Tooltip content */
+.tooltip-message {
+  color: #e0e0e0;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Tooltip links */
+.tooltip-links {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 11px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  pointer-events: auto;
+}
+
+.tooltip-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  text-decoration: none;
+}
+
+.tooltip-link svg {
+  margin-right: 4px;
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* Animation for highlighting */
+@keyframes highlight-pulse {
+  0% { background-color: rgba(255, 183, 0, 0.2); }
+  50% { background-color: rgba(255, 183, 0, 0.4); }
+  100% { background-color: rgba(255, 183, 0, 0.2); }
+}
+
+.baseline-highlight.highlighted {
+  animation: highlight-pulse 1.5s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .baseline-tooltip {
+    width: 240px;
+    font-size: 12px;
+  }
+  
+  .tooltip-links {
+    flex-direction: column;
+  }
+  
+  .tooltip-link {
+    justify-content: center;
+  }
+}
+
+/* Ensure tooltips appear above other elements in the editor */
+.monaco-editor .baseline-tooltip,
+.cm-editor .baseline-tooltip,
+.ace_editor .baseline-tooltip {
+  z-index: 100000;
+}
+
+/* Fix for dark mode in various editors */
+.vscode-dark .baseline-tooltip,
+.vscode-high-contrast .baseline-tooltip,
+.theme-dark .baseline-tooltip,
+[data-theme="dark"] .baseline-tooltip {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Animation for when a new highlight is added */
+@keyframes highlight-fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.baseline-highlight {
+  animation: highlight-fade-in 0.3s ease-out;
+}
