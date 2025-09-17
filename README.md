@@ -74,7 +74,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## Privacy Policy
 
-For details on how this extension handles data and permissions, please read our [Privacy Policy](./PRIVACY)
+For details on how this extension handles data and permissions, please read our [Privacy Policy](./PRIVACY.md)
 
 
 ## Acknowledgments
