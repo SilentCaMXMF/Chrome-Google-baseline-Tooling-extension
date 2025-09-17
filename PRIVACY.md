@@ -1,47 +1,45 @@
-Privacy Policy for Baseline Checker for Cloud IDEs
+# Privacy Policy for Baseline Checker for Cloud IDEs
 
-Effective Date: 20/09/2025
+Last updated: 17/09/2025
 
-Baseline Checker for Cloud IDEs (“the Extension”) respects your privacy. This document explains what information the Extension collects, how it is used, and your choices.
+Baseline Checker for Cloud IDEs ("we", "our", or "the Extension") respects your privacy and is committed to protecting it. This Privacy Policy explains how we handle data and permissions when you use our Chrome extension.
 
-1. Information We Collect
+## Information We Collect
 
-The Extension does not collect, store, or transmit any personal information.
-Specifically:
+The extension does **not** collect any personal information by default. We may temporarily access:
 
-We do not track your browsing history.
+- **Active tab URL**: Only to analyze code in your current Cloud IDE tab.
+- **Code from the editor**: Extracted solely to check web platform features against Baseline data.
 
-We do not collect or share personally identifiable information.
+We do **not** store or transmit your code or personal information to any server.
 
-We do not transfer data to external servers.
+## Permissions
 
-The Extension only analyzes web page content within supported Cloud IDE environments (e.g., GitHub Codespaces, GitHub.dev, Gitpod, CodeSandbox, StackBlitz, Replit) to provide inline warnings about web platform features.
+The extension requests the following permissions:
 
-2. Use of Permissions
+- `activeTab` & `tabs`: To read the content of the currently active tab in order to analyze the code.
+- `storage`: To save your extension settings locally in Chrome.
+- `scripting`: To inject scripts into the active tab for analysis.
+- `webNavigation`: To monitor editor page load and trigger analysis.
+- `host_permissions` (`<all_urls>` or specific Cloud IDE URLs): Required to access the editor page content.
 
-The Extension requests the following permissions:
+We only use these permissions for the purposes described above and do not share any data.
 
-Host permissions: To read code files inside supported Cloud IDEs in order to check compatibility with Baseline web standards.
+## Data Usage
 
-Storage: To save your local extension preferences (e.g., settings or feature toggles).
+- The extension runs entirely locally in your browser.  
+- No code or user data is transmitted to external servers.  
+- Any analysis results are displayed locally in the extension popup.
 
-Active Tab & Scripting: To inject scripts only when you activate the extension.
+## Third-Party Services
 
-Tabs & Web Navigation: To improve the extension’s behavior when switching between IDE tabs or refreshing files.
+The extension does **not** use any analytics, tracking, or third-party services.
 
-These permissions are used solely for functionality and never for data collection.
+## Changes to This Policy
 
-3. Data Sharing
+We may update this Privacy Policy from time to time. Users will be informed via updates in the repository and Chrome Web Store listing.
 
-We do not share, sell, or transmit your data to third parties.
-All processing happens locally in your browser.
-
-4. Changes to This Policy
-
-We may update this Privacy Policy from time to time. Any updates will be published in the GitHub repository
-.
-
-5. Contact
+## Contact
 
 If you have any questions or concerns, please open an issue on the GitHub repository or contact us at:
 📧 silentcamxmf@gmail.com
