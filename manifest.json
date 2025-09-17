@@ -11,7 +11,12 @@
     "webNavigation"
   ],
   "host_permissions": [
-    "https://*.codespaces.github.com/*"
+    "https://*.github.dev/*",
+    "https://*.codespaces.github.com/*",
+    "https://*.gitpod.io/*",
+    "https://*.codesandbox.io/*",
+    "https://*.stackblitz.com/*",
+    "https://replit.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
