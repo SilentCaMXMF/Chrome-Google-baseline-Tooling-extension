@@ -11,7 +11,7 @@
     "webNavigation"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://*.codespaces.github.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
