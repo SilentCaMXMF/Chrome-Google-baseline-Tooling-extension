@@ -72,6 +72,11 @@ Contributions are welcome! Here's how you can help:
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
+## Privacy Policy
+
+For details on how this extension handles data and permissions, please read our [Privacy Policy](./PRIVACY)
+
+
 ## Acknowledgments
 
 - [MDN Web Docs](https://developer.mozilla.org/) for comprehensive web documentation
@@ -80,4 +85,4 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## Support
 
-For issues and feature requests, please [open an issue](https://github.com/yourusername/baseline-checker/issues) on GitHub.
+For issues and feature requests, please [open an issue](https://github.com/silentcamxmf/baseline-checker/issues) on GitHub.
