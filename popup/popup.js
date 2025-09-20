@@ -69,12 +69,38 @@ document.addEventListener('DOMContentLoaded', () => {
     spinner.style.display = 'inline-block';
     
     try {
-      // Send message to content script to analyze the code
-      const response = await chrome.tabs.sendMessage(currentTab.id, { 
-        type: 'ANALYZE_CODE' 
+      // First, inject the content script if not already injected
+      await chrome.scripting.executeScript({
+        target: { tabId: currentTab.id },
+        files: ['content-scripts/content.js']
       });
+  
+      // Then send the message with a timeout
+      const response = await new Promise((resolve) => {
+        const timeoutId = setTimeout(() => {
+          resolve({ error: 'Analysis timed out' });
+        }, 10000); // 10 second timeout
+  
+        chrome.tabs.sendMessage(
+          currentTab.id, 
+          { type: 'ANALYZE_CODE' },
+          (response) => {
+            clearTimeout(timeoutId);
+            if (chrome.runtime.lastError) {
+              console.error('Message error:', chrome.runtime.lastError);
+              resolve({ error: chrome.runtime.lastError.message });
+            } else {
+              resolve(response || { error: 'No response from content script' });
+            }
+          }
+        );
+      });
+  
+      if (response.error) {
+        throw new Error(response.error);
+      }
       
-      if (response && response.issues) {
+      if (response.issues) {
         displayResults(response);
         setStatus('Analysis complete', 'success');
       } else {
@@ -82,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error during analysis:', error);
-      setStatus('Analysis failed', 'error');
+      setStatus(`Error: ${error.message}`, 'error');
     } finally {
       scanBtn.disabled = false;
       spinner.style.display = 'none';
