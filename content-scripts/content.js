@@ -13,6 +13,7 @@ class CodeExtractor {
     this.lastCode = '';
     this.debounceTimer = null;
     this.featureHighlights = new Map();
+    this.lastAnalysis = null;
     this.init();
   }
 
@@ -46,23 +47,46 @@ class CodeExtractor {
   }
 
   async analyzeCode() {
-    const editor = document.querySelector('.monaco-editor, .CodeMirror, .ace_editor, [role="textbox"], [contenteditable="true"]');
-    if (!editor) return;
-
-    // Get the current code (implementation depends on the editor)
-    const code = this.getEditorContent(editor);
-    if (code === this.lastCode) return;
-    
-    this.lastCode = code;
-
-    // Send code to background for analysis
-    const response = await chrome.runtime.sendMessage({
-      type: 'ANALYZE_CODE',
-      code: code
-    });
-
-    if (response && response.issues) {
-      this.highlightIssues(response.issues, editor);
+    try {
+      const editor = document.querySelector('.monaco-editor, .CodeMirror, .ace_editor, [role="textbox"], [contenteditable="true"]');
+      if (!editor) {
+        console.log('No editor found on the page');
+        return { issues: [] };
+      }
+  
+      // Get the editor content
+      const code = this.getEditorContent(editor);
+      if (code === this.lastCode && this.lastAnalysis) {
+        return this.lastAnalysis;
+      }
+      
+      this.lastCode = code;
+  
+      // Mock analysis - replace this with actual analysis logic
+      const mockIssues = [
+        {
+          feature: 'fetch',
+          severity: 'warning',
+          message: 'Consider adding error handling for fetch requests',
+          docsUrl: 'https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch',
+          startPos: 0,
+          endPos: 5
+        }
+      ];
+  
+      // Store the last analysis
+      this.lastAnalysis = {
+        issues: mockIssues,
+        timestamp: new Date().toISOString()
+      };
+  
+      // Highlight the issues in the editor
+      this.highlightIssues(mockIssues, editor);
+  
+      return this.lastAnalysis;
+    } catch (error) {
+      console.error('Error in analyzeCode:', error);
+      throw error;
     }
   }
 
@@ -156,9 +180,28 @@ class CodeExtractor {
   }
 
   handleMessage(message, sender, sendResponse) {
-    if (message.type === 'HIGHLIGHT_ISSUES') {
-      this.highlightIssues(message.issues, document.activeElement);
+    if (message.type === 'ANALYZE_CODE') {
+      this.analyzeCode()
+        .then(analysis => {
+          if (sendResponse) {
+            sendResponse({ 
+              issues: analysis.issues || [],
+              timestamp: analysis.timestamp
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Analysis error:', error);
+          if (sendResponse) {
+            sendResponse({ 
+              error: error.message,
+              timestamp: new Date().toISOString()
+            });
+          }
+        });
+      return true; // Keep the message channel open for async response
     }
+    // ... rest of the method remains the same
   }
 }
 
@@ -226,5 +269,18 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize the code extractor when the script loads
-new CodeExtractor();
+// Initialize the CodeExtractor when the content script loads
+let codeExtractor;
+
+// Check if the document has already loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    codeExtractor = new CodeExtractor();
+  });
+} else {
+  // DOM already loaded, initialize immediately
+  codeExtractor = new CodeExtractor();
+}
+
+// Make the extractor available globally for debugging
+window.baselineExtractor = codeExtractor;

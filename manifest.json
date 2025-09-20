@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Baseline Checker for Cloud IDEs",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Check web features against Baseline data with inline warnings and documentation links",
   "permissions": [
     "activeTab",
@@ -49,13 +49,17 @@
       "js": ["content-scripts/content.js"],
       "css": ["content-scripts/content.css"],
       "run_at": "document_idle",
-      "all_frames": true
+      "all_frames": true,
+      "match_about_blank": true
+
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
         "data/baseline-features.json",
+        "icons/*.png",
+        "icons/*.svg"
         "icons/icon16.png",
         "icons/icon48.png",
         "icons/icon128.png",
